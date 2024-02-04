@@ -5,20 +5,23 @@ import sys
 def main():
     try:
         option = ""
-        listports = []
 
         while option not in ["-k", "--kill"]:
-            option = input("Choose your flag: ")
+            option = input("Choisissez votre option: ")
 
             if option in ["-h", "--help"]:
                 argsServer.arguments()
             elif "-l" in option or "--listen" in option:
-                listports.append(server.listen(option))
+                server.listen(option)
             elif "-r" in option or "--readfile" in option:
-                server.readfile(option)
+                filename = option.split()[1]
+                server.readfile(filename)
             elif "-s" in option or "--show" in option:
                 server.show()
             elif option in ["-k", "--kill"]:
-                sys.exit(0)
+                server.kill_all_servers()
     except KeyboardInterrupt:
-        sys.exit(0)
+        server.kill_all_servers()
+
+if __name__ == "__main__":
+    main()
