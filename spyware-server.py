@@ -5,6 +5,4 @@ import mainserver
 pyfiglet.print_figlet("Spyware")
 argsServer.arguments()
 
-
-
 mainserver.main()

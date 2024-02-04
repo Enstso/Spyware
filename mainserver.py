@@ -5,25 +5,20 @@ import sys
 def main():
     try:
         option = ""
+        listports = []
 
         while option not in ["-k", "--kill"]:
             option = input("Choose your flag: ")
 
-            if option == "-h" or option == "--help":
+            if option in ["-h", "--help"]:
                 argsServer.arguments()
-
             elif "-l" in option or "--listen" in option:
-                listenargs = option.split()
-                port = int(listenargs[1])
-                certificate_file=""
-                server.server_conn("127.0.0.1",port,certificate_file)
+                listports.append(server.listen(option))
             elif "-r" in option or "--readfile" in option:
-                readfileargs = option.split()
-                filename = readfileargs[1]
-                with open(filename,'r') as file:
-                    print(file.read())
+                server.readfile(option)
+            elif "-s" in option or "--show" in option:
+                server.show()
             elif option in ["-k", "--kill"]:
-                print("ls")
                 sys.exit(0)
     except KeyboardInterrupt:
         sys.exit(0)
