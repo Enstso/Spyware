@@ -14,8 +14,7 @@ def main():
             elif "-l" in option or "--listen" in option:
                 server.listen(option)
             elif "-r" in option or "--readfile" in option:
-                filename = option.split()[1]
-                server.readfile(filename)
+                server.readfile(option)
             elif "-s" in option or "--show" in option:
                 server.show()
             elif option in ["-k", "--kill"]:
@@ -23,5 +22,4 @@ def main():
     except KeyboardInterrupt:
         server.kill_all_servers()
 
-if __name__ == "__main__":
-    main()
+

