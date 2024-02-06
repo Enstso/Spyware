@@ -3,11 +3,9 @@ import ssl
 from cryptography.fernet import Fernet
 import os
 import signal
-
 import threading
 
-
-def func_handle_client(conn, cipher_server):
+def handle_client(conn, cipher_suite):
     try:
         tabData = []
         while True:
@@ -15,7 +13,7 @@ def func_handle_client(conn, cipher_server):
             if not data:
                 break
             
-            decrypted_data = cipher_server.decrypt(data).decode("utf-8")
+            decrypted_data = cipher_suite.decrypt(data).decode("utf-8")
             print(decrypted_data)
             tabData.append(decrypted_data)
             if len(tabData) == 2:
@@ -28,7 +26,7 @@ def func_handle_client(conn, cipher_server):
 
 def server_conn(server_address, server_port):
     key = "Y7AYXeoiELaca2QtHeTubSGmbTOu27QyYin2f-Wfr3s="
-    cipher_server = Fernet(key)
+    cipher_suite = Fernet(key)
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
     server_socket.bind((server_address, server_port))
@@ -38,13 +36,15 @@ def server_conn(server_address, server_port):
     try:
         while True:
             conn, address_client = server_socket.accept()
-            print(f"New connection of {address_client}")
-            client_handler = threading.Thread(target=func_handle_client, args=(conn, cipher_server))
+            print(f"Nouvelle connexion de {address_client}")
+            client_handler = threading.Thread(target=handle_client, args=(conn, cipher_suite))
             client_handler.start()
-    except Exception as e:
-        print(f'error: {e}')
     finally:
         server_socket.close()
+
+# Les autres fonctions restent inchangées
+
+
 
 def readfile(option):
     filename = option
@@ -70,7 +70,6 @@ def kill_all_servers():
 
     """
     Envoyer le message aux clients pour stopper toutes les connexions
-
     il faut tuer le processus à la fin, car si le processus est mort impossible de récupérer les infos des clients
     """
     os.kill(os.getpid(), signal.SIGTERM)

