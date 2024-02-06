@@ -1,8 +1,13 @@
+import argparse
+
 def arguments():
-    print("usage: spyware-server.py\n")
-    print("optional arguments:\n")
-    print(" -h, --help show all commandes")
-    print(" -l <port>, --listen <port> port to listen")
-    print(" -s, --show print files in server")
-    print(" -r <filename>, --readfile <filename> read the content of file in the server")
-    print(" -k, --kill kill all instances")
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-l", "--listen", metavar='<port>', type=int, help="switch to listen on specified port")
+    parser.add_argument("-r", "--readfile", metavar='<filename>', type=str, help="switch to read the specified file")
+    parser.add_argument("-s", "--show", action="store_true", help="switch to print files in server")
+    parser.add_argument("-k", "--kill", action="store_true", help="switch to kill all instances")
+    return parser.parse_args()
+
+
+if __name__ == "__main__":
+    arguments()

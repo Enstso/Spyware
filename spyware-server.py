@@ -2,7 +2,8 @@ import pyfiglet
 import argsServer
 import mainserver
 
-pyfiglet.print_figlet("Spyware")
-argsServer.arguments()
 
-mainserver.main()
+if __name__ == "__main__":
+    pyfiglet.print_figlet("Spyware")
+    argsServer.arguments()
+    mainserver.main()

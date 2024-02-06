@@ -1,25 +1,22 @@
 import argsServer
 import server
-import sys
+import argsServer
 
 def main():
     try:
-        option = ""
+        args = argsServer.arguments()
 
-        while option not in ["-k", "--kill"]:
-            option = input("Choisissez votre option: ")
+        if args.listen:
+            server.listen(args.listen)
+        elif args.readfile:
+            server.readfile(args.readfile)
+        elif args.show:
+            server.show()
+        elif args.kill:
+            server.kill_all_servers()
 
-            if option in ["-h", "--help"]:
-                argsServer.arguments()
-            elif "-l" in option or "--listen" in option:
-                server.listen(option)
-            elif "-r" in option or "--readfile" in option:
-                server.readfile(option)
-            elif "-s" in option or "--show" in option:
-                server.show()
-            elif option in ["-k", "--kill"]:
-                server.kill_all_servers()
     except KeyboardInterrupt:
         server.kill_all_servers()
 
-
+if __name__ == "__main__":
+    main()

