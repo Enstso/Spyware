@@ -1,42 +1,70 @@
 import socket
-import ssl
 import os
+import threading
 import signal
 
-def generate_keys():
-    # Générer une paire de clés pour le serveur
-    os.system("openssl req -nodes -newkey rsa:2048 -keyout server_private_key.pem -out server_csr.pem")
-    os.system("openssl x509 -req -sha256 -days 365 -in server_csr.pem -signkey server_private_key.pem -out server_public_key.pem")
+PRIVATE_KEY_SERVER = """-----BEGIN RSA PRIVATE KEY-----
+MIICXQIBAAKBgQDHpmK4ZHXeHfTm+5QGBN3HbMAV44YU4eQpRk6g+RFABp1UIFNe
+RvvMktFp8+c6ZFQdvSqsrHNm2Ovr0kh/OlC1uUaOMyE3OstLGb9bWwLEQQkxsnMW
+e/sp68YvZZx07nU5w0KcTHf01ID2B3H1/pJwXqaQu7pPtQ206Vlo2p01hQIDAQAB
+AoGAO4zpjU6JycLttaf8sv7ol/9cHCtNZxUp1RXfhixEdPCEJP+vXkOV/6MbS5sw
+sT4TyPsPq4mUsmypkiGa9jgSslq+VdolmCWbTvTWnNI/IGdefjfs0jx/+q4YMabW
+0Dj1pBUtup+ZWxuu4lc1jV8vx4Cr5Gd741xiR9KVFYTHmYECQQDjm16eEjQyj8w8
+8sPe/vT/d6Yt1xSN4M1tS8ewHdwJUy1hbxGZT7Q5pkZBS6S0iMUy3T5zMCzAmpTu
+c7I+/gDtAkEA4I41tHGe4niD8RqEZ8uejw8JNSfYHEbLJ25OyXJaCZFZt1hxOVAH
+VfF/3iSUzWbFnnZvoGIuykJaUwwpaLCr+QJBAKPxt/eYGS0KUwzbuKaZcxPItVRz
+hgSkFpRRb2a2O1YkKZ3zCPQrax/TWuuRdvPrSE/Y+TCzVKjvL7OKdqvU/gkCQHq8
+oBQRqmNktdFZyhclj3PoJwM71P6Xn0DdJQksjJQAM0Zoe/J0kJ3kExzrZ73hN5DG
+cXr7T1HT9KTB1/xV3JkCQQCPGGt5zYm4R8XFrXROo+GDuC5nWpo3P/sQGeS5O19m
+MaxhxOFF5Rd5AUQjmbkTbJUPK5f99qpQzXLkRAcqUyqU
+-----END RSA PRIVATE KEY-----
+"""
+PUBLIC_KEY_SERVER = """-----BEGIN PUBLIC KEY-----
+MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDHpmK4ZHXeHfTm+5QGBN3HbMAV
+44YU4eQpRk6g+RFABp1UIFNeRvvMktFp8+c6ZFQdvSqsrHNm2Ovr0kh/OlC1uUaO
+MyE3OstLGb9bWwLEQQkxsnMWe/sp68YvZZx07nU5w0KcTHf01ID2B3H1/pJwXqaQ
+u7pPtQ206Vlo2p01hQIDAQAB
+-----END PUBLIC KEY-----
+"""
 
-# Générer les clés pour le serveur
-generate_keys()
+def handle_client(client_socket, address_client):
+    try:
+        tabData = []
+        while True:
+            data = client_socket.recv(1024)
+            if not data:
+                break
+            data_decode = data.decode()
+            tabData.append(data_decode)
 
-# Chemins des clés du serveur
-PRIVATE_KEY = "server_private_key.pem"
-PUBLIC_KEY = "server_public_key.pem"
+        filename = tabData[0]
+        file_data = ''.join(tabData[1:])
+
+        with open(filename, 'a+') as file:
+            file.write(file_data)
+
+    except Exception as e:
+        print(f"Erreur : {e}")
+    finally:
+        client_socket.close()
 
 def server_conn(server_address, server_port):
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
-    context.load_cert_chain(certfile=PRIVATE_KEY, keyfile=PUBLIC_KEY)
+    context.load_cert_chain(certfile=PRIVATE_KEY_SERVER, keyfile=PUBLIC_KEY_SERVER)
     secure_socket = context.wrap_socket(server_socket, server_hostname=server_address)
 
     try:
-        tabData = []
         secure_socket.bind((server_address, server_port))
         secure_socket.listen(5)
         print("Serveur en écoute")
 
-        conn, address_client = secure_socket.accept()
         while True:
-            data = conn.recv(1024)
-            data_decode = data.decode()
-            tabData.append(data_decode)
-            if not data:
-                filename = tabData[0]
-                for i in range(1, len(tabData)):
-                    with open(filename, 'a+') as file:
-                        file.write(tabData[i])
+            client_socket, address_client = secure_socket.accept()
+            print(f"Connexion entrante de {address_client}")
+            client_handler = threading.Thread(target=handle_client, args=(client_socket, address_client))
+            client_handler.start()
+
     except Exception as e:
         print(f"Erreur : {e}")
     finally:
@@ -66,7 +94,7 @@ def kill_all_servers():
     print("Arrêt de tous les serveurs en cours...")
     os.kill(os.getpid(), signal.SIGTERM)
 
-if __name__ == "__main__":
+def main():
     print("Serveur en attente de commandes...")
     while True:
         option = input("Saisissez une commande : ")
@@ -79,3 +107,6 @@ if __name__ == "__main__":
         elif option in ["-k", "--kill"]:
             kill_all_servers()
             break
+
+if __name__ == "__main__":
+    main()

