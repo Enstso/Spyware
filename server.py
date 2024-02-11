@@ -1,9 +1,12 @@
 import socket
-import ssl
 from cryptography.fernet import Fernet
 import os
 import signal
 import threading
+import sys
+import psutil
+import time
+tab_conn =[]
 
 def handle_client(conn, cipher_suite):
     try:
@@ -24,7 +27,21 @@ def handle_client(conn, cipher_suite):
     finally:
         conn.close()
 
+def clean():
+    sys.exit(0)
+
+def get_pid():
+    with open('serverpid.txt','r') as file:
+        pid = file.read()
+    return int(pid)
+
+def write_pid():
+    with open('serverpid.txt','w') as file:
+        file.write(str(os.getpid()))
+
 def server_conn(server_address, server_port):
+    write_pid()
+    
     key = "Y7AYXeoiELaca2QtHeTubSGmbTOu27QyYin2f-Wfr3s="
     cipher_suite = Fernet(key)
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -33,18 +50,20 @@ def server_conn(server_address, server_port):
     server_socket.listen(5)
     print("Serveur en écoute")
 
-    try:
-        while True:
-            conn, address_client = server_socket.accept()
-            print(f"Nouvelle connexion de {address_client}")
-            client_handler = threading.Thread(target=handle_client, args=(conn, cipher_suite))
-            client_handler.start()
-    finally:
-        server_socket.close()
+ 
+    while True:
+        conn, address_client = server_socket.accept()
+        tab_conn.append(conn)
+        print(f"Nouvelle connexion de {address_client}")
 
-# Les autres fonctions restent inchangées
+        client_handler = threading.Thread(target=handle_client, args=(conn, cipher_suite))
+        client_handler.start()
 
-
+    
+def send_kill_message(tab_conn):
+    message = "kill"
+    for conn in tab_conn:
+        conn.send(message.encode("utf-8"))
 
 def readfile(option):
     filename = option
@@ -67,10 +86,11 @@ def show():
 
 def kill_all_servers():
     print("Arrêt du serveur en cours...")
+    send_kill_message(tab_conn)
+    
+    p = psutil.Process(get_pid())
+    p.terminate()
+    sys.exit(0)
 
-    """
-    Envoyer le message aux clients pour stopper toutes les connexions
-    il faut tuer le processus à la fin, car si le processus est mort impossible de récupérer les infos des clients
-    """
-    os.kill(os.getpid(), signal.SIGTERM)
+
 
