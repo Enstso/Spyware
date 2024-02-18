@@ -4,14 +4,14 @@ import os
 import threading
 import sys
 import psutil
-
+import time
 tab_conn = []
 
 def handle_client(conn, cipher_suite):
     try:
         tabData = []
         while True:
-            send_kill_message(tab_conn)
+            print("Waiting for data...")
             data = conn.recv(1024)
             if not data:
                 break
@@ -23,11 +23,12 @@ def handle_client(conn, cipher_suite):
                 with open("./files/" + filename, 'a+') as file:
                     file.write(tabData[1])
                 tabData = []
+                conn.close()
+                break
     except Exception as e:
+        print(f"Error: {e}")
+    finally:
         conn.close()
-        if not socket_alive(tab_conn):
-            p = psutil.Process(get_pid())
-            p.terminate()
 
 def socket_alive(tab_conn):
     for conn in tab_conn:
@@ -38,8 +39,8 @@ def socket_alive(tab_conn):
     return bool(tab_conn)
 
 def clean():
-    sys.exit(0)
-
+    psutil.Process(get_pid()).terminate()
+    
 def get_pid():
     with open('serverpid.txt','r') as file:
         pid = file.read()
@@ -49,6 +50,16 @@ def write_pid():
     with open('serverpid.txt','w') as file:
         file.write(str(os.getpid()))
 
+def verify_kill():
+        while True:
+            if os.path.exists('kill.txt') and socket_alive(tab_conn):
+                send_kill_message(tab_conn)
+                time.sleep(2)
+            if os.path.exists('kill.txt') and not socket_alive(tab_conn):
+                os.remove('kill.txt')
+                clean()
+           
+        
 def server_conn(server_address, server_port):
     write_pid()
     key = "Y7AYXeoiELaca2QtHeTubSGmbTOu27QyYin2f-Wfr3s="
@@ -61,21 +72,24 @@ def server_conn(server_address, server_port):
     while True:
         conn, address_client = server_socket.accept()
         tab_conn.append(conn)
+        print("Waiting for data...")
         print(f"New connection from {address_client}")
         client_handler = threading.Thread(target=handle_client, args=(conn, cipher_suite))
         client_handler.start()
+        threading.Thread(target=verify_kill).start()
+
 
 def send_kill_message(tab_conn):
-    if os.path.exists('kill.txt'):
-        message = "kill"
-        for conn in tab_conn:
-            try:
-                if len(tab_conn)!=0:
-                    conn.send(message.encode("utf-8"))
-                    tab_conn.remove(conn)
-            except Exception as e:
-                print("Error:",e)
-                
+    
+    key = "Y7AYXeoiELaca2QtHeTubSGmbTOu27QyYin2f-Wfr3s="
+    message = "kill"
+    print("Sending kill message to all clients...")
+    for conn in tab_conn:
+        if len(tab_conn)!=0:
+            encrypted_message = Fernet(key).encrypt(message.encode('utf-8'))
+            conn.send(encrypted_message)
+            tab_conn.remove(conn)
+    
 def readfile(option):
     filename = option
     try:
@@ -97,3 +111,4 @@ def show():
 def kill_all_servers():
     with open('kill.txt', 'w') as file:
         file.write("kill")
+    
