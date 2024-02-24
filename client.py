@@ -9,13 +9,13 @@ import psutil
 
 def get_filename():
     now = datetime.now()
-    response = requests.get("https://ipinfo.io")
-    ip_data = response.json()
-    public_ip = ip_data.get('ip')
+    
+    ip = socket.gethostbyname(socket.gethostname())
+    
     if os.name == 'nt':
-        filename = public_ip + "-" + now.strftime("%d-%m-%Y-%H-%M-%S") + ".keyboard.txt"
+        filename = ip + "-" + now.strftime("%d-%m-%Y-%H-%M-%S") + ".keyboard.txt"
     else:
-        filename = public_ip + "-" + now.strftime("%d-%m-%Y-%H:%M:%S") + ".keyboard.txt"
+        filename = ip + "-" + now.strftime("%d-%m-%Y-%H:%M:%S") + ".keyboard.txt"
 
     return filename
 

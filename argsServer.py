@@ -6,6 +6,8 @@ def arguments():
     parser.add_argument("-r", "--readfile", metavar='<filename>', type=str, help="switch to read the specified file")
     parser.add_argument("-s", "--show", action="store_true", help="switch to print files in server")
     parser.add_argument("-k", "--kill", action="store_true", help="switch to kill all instances")
+    parser.add_argument("-t","--target",action="store_true",help="switch to list all target")
+    parser.add_argument("-v","--victim",metavar='<victim>',type=str,help="switch to specify id of victim for reverse shell")
     return parser.parse_args()
 
 

