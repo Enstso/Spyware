@@ -1,5 +1,9 @@
 import argparse
 
+
+"""
+fonction qui permet de parser les arguments passés en ligne de commande
+"""
 def arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument("-l", "--listen", metavar='<port>', type=int, help="switch to listen on specified port")
