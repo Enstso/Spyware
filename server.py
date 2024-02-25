@@ -160,11 +160,7 @@ def show():
 
 
 def kill_all_servers():
-    state_socket = socket_alive(tab_socket)
-    if state_socket:
-        with open('kill.txt', 'w+') as file:
-            file.write("kill")
-    else:
-        clean()
-   
+
+    with open('kill.txt', 'w+') as file:
+        file.write("kill")  
         
