@@ -1,4 +1,4 @@
-# Spyware - Projet Final
+# Spyware 
 
 Ce projet consiste en la création d'un spyware (logiciel espion) en Python 3, composé d'un client et d'un serveur. Le spyware doit être fonctionnel sur les systèmes Windows et Linux, et peut être utilisé en tant que programme exécutable. Il répond aux exigences suivantes :
 
