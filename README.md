@@ -1,7 +1,3 @@
-Here’s a clean, clear, and complete README you can use in English, with both **Linux (Bash)** and **Windows (PowerShell)** instructions:
-
----
-
 # 🕵️ Spyware
 
 This project is a **Python 3 spyware** system consisting of a **client** and a **server**. The spyware is cross-platform, functional on both **Linux** and **Windows**, and can be compiled into executables.
