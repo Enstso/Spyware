@@ -199,7 +199,7 @@ fonction qui écoute sur le port spécifié
 
 def listen(option):
     port = option
-    server_conn("192.168.1.13", port) # lancement du serveur
+    server_conn("ip_server", port) # lancement du serveur
 
 
 """
