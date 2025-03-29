@@ -152,7 +152,3 @@ The server:
 - **Discord Notification**: Sends a message via a **Discord Webhook** when a victim connects.
 - **Reverse Shell Access**: Server can open a reverse shell on the client machine.
 
----
-
-If you want, I can package this into a nice-looking `README.md` file with emojis, structure, and clickable sections.  
-**Shall I?**
