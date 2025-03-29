@@ -1,38 +1,158 @@
-# Spyware 
+Here’s a clean, clear, and complete README you can use in English, with both **Linux (Bash)** and **Windows (PowerShell)** instructions:
 
-This project involves the creation of a spyware (spy software) in Python 3, consisting of a client and a server. The spyware must be functional on both Windows and Linux systems and can be used as an executable program. It meets the following requirements :
+---
 
-## Technical Requirements for the Client :
+# 🕵️ Spyware
 
-The client must :
+This project is a **Python 3 spyware** system consisting of a **client** and a **server**. The spyware is cross-platform, functional on both **Linux** and **Windows**, and can be compiled into executables.
 
-- Record keystrokes in a hidden file on the victim's system.
-- Send the file securely to the server via a network socket.
-- Stop if the command is received from the server and delete the capture file.
-- Automatically stop after a maximum of 10 minutes of capture if the server is unreachable.
+---
 
-## Technical Requirements for the Server :
+## 🚀 Setup & Usage
 
-The server must :
+### 1. Create Docker Network
 
-- Receive data from the client via a secure socket.
-- Listen on a TCP port from an external machine, different from the victim's machine.
-- Receive the data and save it in a unique file for each victim.
-- Send a message to the spyware via the socket, instructing it to stop when the server shuts down.
-- Be able to connect to a reverse shell of the spyware.
+#### On Linux (Bash)
+```bash
+docker network create spyware-net
+```
 
-- Embed the following arguments :
-  - `-h/--help` : Displays help and available options.
-  - `-l <port>/--listen <port>` : Listens on the specified TCP port provided by the user and waits for data from the spyware.
+#### On Windows (PowerShell)
+```powershell
+docker network create spyware-net
+```
 
-  - `-s/--show` : Displays the list of files received by the program.
-  - `-r <filename>/--readfile <filename>` : Displays the content of the file stored on the server from the spyware. The content must be perfectly readable.
-  - `-k/--kill` : Stops all running server instances, notifies the spyware to stop and delete the capture.
-  - `-t/--target` : Displays all victims currently connected.
-  - `-v <id>/--victim <id>` :  Sends a shell message to the spyware to connect to the server’s netcat (reverse-shell).
+---
 
-## Additional Features :
+### 2. Build Docker Image
 
-- The server accepts multiple client connections and can manage multiple victims at the same time. It can also handle multiple capture files for each victim.
-- When a client connects, a message should be sent to a Discord bot via a webhook to notify about the connection.
-- The server must be able to connect to a reverse shell of the spyware.
+#### On Linux (Bash)
+```bash
+docker build -t spyware .
+```
+
+#### On Windows (PowerShell)
+```powershell
+docker build -t spyware .
+```
+
+---
+
+### 3. Run Server Container
+
+#### On Linux (Bash)
+```bash
+docker run -dit --name spyware-server -v $(pwd):/app --network spyware-net spyware
+```
+
+#### On Windows (PowerShell)
+```powershell
+docker run -dit --name spyware-server -v ${PWD}:/app --network spyware-net spyware
+```
+
+---
+
+### 4. Run Client Container
+
+#### On Linux (Bash)
+```bash
+docker run -dit --name spyware-client -v $(pwd):/app --network spyware-net spyware
+```
+
+#### On Windows (PowerShell)
+```powershell
+docker run -dit --name spyware-client -v ${PWD}:/app --network spyware-net spyware
+```
+
+---
+
+### 5. Access Docker Containers
+
+#### On Linux (Bash)
+```bash
+docker exec -it spyware-server bash
+docker exec -it spyware-client bash
+```
+
+#### On Windows (PowerShell)
+```powershell
+docker exec -it spyware-server bash
+docker exec -it spyware-client bash
+```
+
+---
+
+### 6. Configure IP Address
+
+Retrieve the **server container's IP address**:
+```bash
+docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' spyware-server
+```
+Update the `ip_server` variable in **client.py** and **server.py** with this IP.
+
+---
+
+### 7. Start the Spyware
+
+#### Server
+```bash
+python3 spyware-server.py
+```
+
+#### Client
+```bash
+python3 client.py
+```
+
+---
+
+## ⚙️ Project Specifications
+
+### 🖥️ Client Features
+
+The client:
+
+- Records keystrokes in a hidden file on the victim's machine.
+- Sends the captured keystrokes securely to the server over a network socket.
+- Stops and deletes the capture file when receiving a shutdown command from the server.
+- Automatically stops after **10 minutes** if the server is unreachable.
+
+---
+
+### 🖥️ Server Features
+
+The server:
+
+- Receives data securely from the client over a network socket.
+- Listens on a **TCP port** from an external machine.
+- Stores received data in a unique file for each victim.
+- Sends a stop command to the client when the server shuts down.
+- Allows connection to a **reverse shell** of the client.
+- Manages multiple client connections simultaneously.
+
+---
+
+### 🧩 Command-Line Arguments
+
+| Argument | Description |
+|-------|-------|
+| `-h, --help` | Show help and available options. |
+| `-l <port>, --listen <port>` | Listen on a specified TCP port and wait for data. |
+| `-s, --show` | Display the list of received files. |
+| `-r <filename>, --readfile <filename>` | Display the content of a stored file. |
+| `-k, --kill` | Stop all server instances, notify clients to stop and delete captures. |
+| `-t, --target` | Show all currently connected victims. |
+| `-v <id>, --victim <id>` | Send a reverse shell command to a specific victim. |
+
+---
+
+### 📬 Additional Features
+
+- **Multiple Victim Management**: Handles multiple connections and capture files.
+- **Discord Notification**: Sends a message via a **Discord Webhook** when a victim connects.
+- **Reverse Shell Access**: Server can open a reverse shell on the client machine.
+
+---
+
+If you want, I can package this into a nice-looking `README.md` file with emojis, structure, and clickable sections.  
+**Shall I?**
